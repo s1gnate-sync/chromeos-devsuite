@@ -1,0 +1,93 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"os/exec"
+	"sucrosh/sshshell"
+	"syscall"
+)
+
+type Environ []string
+
+func (this *Environ) Set(value string) error {
+	*this = append(*this, value)
+	return nil
+}
+
+func (this *Environ) String() string {
+	return fmt.Sprintf("%v", *this)
+}
+
+var (
+	Address = flag.String("addr", "127.0.0.1:22", "listen on specified `address:port`")
+	HostKey = flag.String("key", "/usr/local/sucrosh_host_key", "read rsa host key from `file`")
+	Uid     = flag.Int64("uid", 0, "change user `id`")
+	Gid     = flag.Int64("gid", 0, "change group `id`")
+	Dir     = flag.String("dir", "", "change working directory to `dir`")
+	Env     Environ
+	CmdArgs []string
+)
+
+func init() {
+	flag.Var(&Env, "env", "specify environment varibale by `name=value`")
+
+	if value := os.Getenv("SUCROSH_ADDRESS"); value != "" {
+		flag.Lookup("addr").DefValue = value
+	}
+
+	if value := os.Getenv("SUCROSH_DIR"); value != "" {
+		flag.Lookup("wd").DefValue = value
+	}
+
+	if value := os.Getenv("SUCROSH_UID"); value != "" {
+		flag.Lookup("uid").DefValue = value
+	}
+
+	if value := os.Getenv("SUCROSH_GID"); value != "" {
+		flag.Lookup("gid").DefValue = value
+	}
+
+	if value := os.Getenv("SUCROSH_LOGIN"); value != "" {
+		flag.Lookup("login").DefValue = value
+	}
+
+}
+
+func die(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	CmdArgs = flag.Args()
+	if len(CmdArgs) == 0 {
+		if value := os.Getenv("SUCROSH_CMD"); value != "" {
+			CmdArgs = []string{value}
+		} else {
+			CmdArgs = []string{"sh"}
+		}
+	}
+
+	die(sshshell.Run(*Address, *HostKey, func() *exec.Cmd {
+		cmd := exec.Command(CmdArgs[0], CmdArgs[1:]...)
+		cmd.Dir = *Dir
+
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Credential: &syscall.Credential{
+				Uid: uint32(*Uid),
+				Gid: uint32(*Gid),
+			},
+		}
+
+		cmd.Env = append(cmd.Env, Env...)
+		cmd.Env = append(cmd.Env, "PATH=/usr/bin:/usr/sbin:/bin:/sbin")
+
+		return cmd
+	}))
+}
