@@ -56,7 +56,7 @@ func main() {
 	}
 
 	pid, err := syscall.ForkExec(*Sh, []string{"sh", "-l", "-c", strings.Join(args, " ")}, &syscall.ProcAttr{
-		Env:   os.Environ(),
+		Env:   append(os.Environ(), "PATH=/usr/sbin:/usr/bin:/sbin:/bin"),
 		Files: []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()},
 		Sys: &syscall.SysProcAttr{
 			Credential: &syscall.Credential{

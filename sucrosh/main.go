@@ -59,7 +59,7 @@ func init() {
 			SysProcAttr: &syscall.SysProcAttr{
 				Cloneflags: syscall.CLONE_NEWNS,
 			},
-			Env:    []string{"UNSHARED=1"},
+			Env:    append(os.Environ(), "UNSHARED=1"),
 			Stdout: os.Stdout,
 			Stdin:  os.Stdin,
 			Stderr: os.Stderr,

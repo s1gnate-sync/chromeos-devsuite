@@ -28,7 +28,7 @@ func init() {
 
 	if os.Getenv("SKIPASS") == "" {
 		cmd := exec.Command(executable(), os.Args[1:]...)
-		cmd.Env = []string{"SKIPASS=1"}
+		cmd.Env = append([]string{"SKIPASS=1"}, os.Environ()...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
