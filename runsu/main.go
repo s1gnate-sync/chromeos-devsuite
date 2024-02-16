@@ -25,7 +25,7 @@ func init() {
 
 	if *Enable {
 		syscall.Chown(executable, 0, 0)
-		syscall.Chmod(executable, syscall.S_IRWXU|syscall.S_IXOTH|syscall.S_IXGRP|syscall.S_ISUID)
+		syscall.Chmod(executable, syscall.S_IRWXU|syscall.S_IROTH|syscall.S_IRGRP|syscall.S_IXGRP|syscall.S_IXOTH|syscall.S_ISUID)
 	} else if *Disable {
 		syscall.Chown(executable, 65534, 65534)
 	}
@@ -56,6 +56,7 @@ func main() {
 	}
 
 	pid, err := syscall.ForkExec(*Sh, []string{"sh", "-l", "-c", strings.Join(args, " ")}, &syscall.ProcAttr{
+		Env:   os.Environ(),
 		Files: []uintptr{os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd()},
 		Sys: &syscall.SysProcAttr{
 			Credential: &syscall.Credential{
@@ -73,7 +74,7 @@ func main() {
 	var status syscall.WaitStatus
 	syscall.Wait4(pid, &status, 0, nil)
 	if !status.Exited() {
-		fmt.Fprintf(os.Stderr, "%s: status %s\n", args, status.ExitStatus())
+		fmt.Fprintf(os.Stderr, "%s: status %d\n", args, status.ExitStatus())
 	}
 
 	os.Exit(status.ExitStatus())
