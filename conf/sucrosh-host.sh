@@ -8,5 +8,5 @@ exec /usr/local/suite/bin/sucrosh \
 	-uid '1000' \
 	-gid '1000' \
 	-dir '/' \
-	-env 'TMPDIR=/usr/local/tmp,HOME=/home/chronos/user,PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin' \
+	-env 'TMPDIR=/usr/local/tmp,HOME=/home/chronos/user,PATH=/usr/local/suite/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
 	-- '/bin/bash' '-l'
